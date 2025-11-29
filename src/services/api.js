@@ -62,5 +62,41 @@ export const apiService = {
         });
         if (!response.ok) throw new Error('Failed to delete thread');
         return response.text();
+    },
+
+    async uploadDocument(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/documents`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to upload document');
+        }
+        return response.json();
+    },
+
+    async getDocuments() {
+        const response = await fetch(`${API_URL}/documents`, {
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to fetch documents');
+        return response.json();
+    },
+
+    async deleteDocument(id) {
+        const response = await fetch(`${API_URL}/documents/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to delete document');
+        return response.text();
     }
 };

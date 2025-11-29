@@ -85,7 +85,7 @@ watch(() => props.loading, () => scrollToBottom('smooth'));
       </div>
 
       <!-- Messages -->
-      <TransitionGroup name="message" tag="div">
+      <TransitionGroup name="message" tag="div" class="!pb-10">
         <MessageBubble 
           v-for="msg in messages" 
           :key="msg.id" 

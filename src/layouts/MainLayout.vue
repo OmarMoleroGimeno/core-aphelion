@@ -187,6 +187,26 @@ onMounted(async () => {
             </router-link>
         </div>
 
+        <!-- Knowledge Base -->
+        <div class="shrink-0 mb-2">
+            <router-link 
+              to="/knowledge"
+              class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative"
+              :class="route.path === '/knowledge' 
+                ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200'"
+            >
+              <i class="pi pi-book text-xl shrink-0"></i>
+              <span 
+                class="font-medium whitespace-nowrap transition-all duration-300 origin-left"
+                :class="isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'"
+              >
+                Knowledge Base
+              </span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Knowledge Base</span>
+            </router-link>
+        </div>
+
         <!-- Chats Section - Takes remaining space -->
         <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
             <div 
@@ -320,6 +340,15 @@ onMounted(async () => {
             >
                 <i class="pi pi-users text-xl"></i>
                 <span class="font-medium">Users</span>
+            </router-link>
+
+            <router-link 
+                to="/knowledge"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 hover:text-gray-900 dark:hover:text-gray-200"
+                @click="isMobileMenuOpen = false"
+            >
+                <i class="pi pi-book text-xl"></i>
+                <span class="font-medium">Knowledge Base</span>
             </router-link>
 
             <div class="border-t border-gray-100 dark:border-gray-800/50 my-2"></div>
