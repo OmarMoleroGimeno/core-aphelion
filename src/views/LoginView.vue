@@ -50,7 +50,7 @@ const handleSubmit = async () => {
       </div>
 
       <div class="w-full max-w-md space-y-8">
-        <div class="text-center">
+        <div class="text-center animate-fade-in-up">
           <div class="mx-auto h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30">
             <i class="pi pi-bolt text-2xl text-white"></i>
           </div>
@@ -62,7 +62,7 @@ const handleSubmit = async () => {
           </p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6 animate-fade-in-up animate-delay-100">
           <div v-if="error" class="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg text-sm text-center">
             {{ error }}
           </div>

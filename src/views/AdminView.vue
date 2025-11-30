@@ -17,6 +17,8 @@ import Tag from 'primevue/tag';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 
+import { FilterMatchMode } from '@primevue/core/api';
+
 const authStore = useAuthStore();
 const usersStore = useUsersStore();
 const { users, loading } = storeToRefs(usersStore);
@@ -31,6 +33,10 @@ const passwordDialogVisible = ref(false);
 const userToChangePassword = ref(null);
 const newPassword = ref('');
 const changingPassword = ref(false);
+
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+});
 
 const roles = ref([
     { label: 'User', value: 'user' },
@@ -274,25 +280,42 @@ onMounted(() => {
             <!-- User List -->
             <div class="bg-white dark:bg-[#1E1E1E] rounded-2xl shadow-sm dark:shadow-none overflow-hidden border border-gray-100 dark:border-gray-600/50">
               <div class="p-6 border-b border-gray-100 dark:border-gray-600/50">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div class="flex items-center gap-2">
                     <i class="pi pi-users text-xl text-orange-600 dark:text-orange-400"></i>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">User List</h2>
                   </div>
-                  <Button 
-                    icon="pi pi-refresh" 
-                    text 
-                    rounded 
-                    @click="loadUsers(true)"
-                    :loading="loading"
-                    class="!text-gray-500 dark:!text-gray-400"
-                  />
+                  <div class="flex items-center gap-2">
+                    <IconField>
+                        <InputIcon class="pi pi-search" />
+                        <InputText v-model="filters['global'].value" placeholder="Search users..." class="w-full md:w-64" />
+                    </IconField>
+                    <Button 
+                        icon="pi pi-refresh" 
+                        text 
+                        rounded 
+                        @click="loadUsers(true)"
+                        :loading="loading"
+                        class="!text-gray-500 dark:!text-gray-400"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <DataTable :value="users" :loading="loading" stripedRows class="w-full" :pt="{ 
+              <DataTable 
+                :value="users" 
+                :loading="loading" 
+                stripedRows 
+                paginator 
+                :rows="5" 
+                :rowsPerPageOptions="[5, 10, 20, 50]"
+                v-model:filters="filters"
+                :globalFilterFields="['username', 'email', 'role']"
+                class="w-full" 
+                :pt="{ 
                   headerRow: { class: 'bg-gray-50 dark:bg-[#131314] text-gray-500 dark:text-gray-400' },
-                  bodyRow: { class: 'hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 transition-colors' }
+                  bodyRow: { class: 'hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 transition-colors' },
+                  paginator: { class: 'bg-white dark:bg-[#1E1E1E] border-t border-gray-100 dark:border-gray-600/50' }
               }">
                 <template #empty>
                     <div class="p-12 text-center">

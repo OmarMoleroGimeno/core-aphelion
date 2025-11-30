@@ -110,10 +110,10 @@ onMounted(async () => {
         <div class="shrink-0 mb-2">
             <router-link 
               v-if="isAdmin"
-              to="/admin"
+              to="/users"
               class="flex items-center py-3 rounded-xl transition-all duration-200 group relative"
               :class="[
-                route.path === '/admin' 
+                route.path === '/users' 
                   ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200',
                 isSidebarExpanded ? 'px-3 gap-3' : 'justify-center'
@@ -127,7 +127,7 @@ onMounted(async () => {
               >
                 Users
               </span>
-              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Users</span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 dark:bg-gray-500/30 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Users</span>
             </router-link>
         </div>
 
@@ -152,7 +152,7 @@ onMounted(async () => {
               >
                 Knowledge Base
               </span>
-              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Knowledge Base</span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 dark:bg-gray-500/30 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Knowledge Base</span>
             </router-link>
         </div>
 
@@ -176,7 +176,7 @@ onMounted(async () => {
               >
                 Chats
               </span>
-              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Chats</span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 dark:bg-gray-500/30 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Chats</span>
             </router-link>
         </div>
       </nav>
@@ -242,7 +242,7 @@ onMounted(async () => {
             <!-- Navigation Links -->
             <router-link 
                 v-if="isAdmin"
-                to="/admin"
+                to="/users"
                 class="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 hover:text-gray-900 dark:hover:text-gray-200"
                 @click="isMobileMenuOpen = false"
             >
@@ -305,7 +305,9 @@ onMounted(async () => {
                 class="!bg-white/80 dark:!bg-zinc-800/80 backdrop-blur-md !border !border-gray-200 dark:!border-gray-700 !text-gray-600 dark:!text-gray-300 shadow-lg hover:!bg-white dark:hover:!bg-zinc-800 transition-all"
             />
         </div>
-        <slot />
+        <Transition name="page" mode="out-in">
+            <slot />
+        </Transition>
     </main>
   </div>
 </template>

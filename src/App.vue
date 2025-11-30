@@ -11,13 +11,13 @@ const layout = computed(() => {
 </script>
 
 <template>
-  <component :is="layout">
-    <RouterView v-slot="{ Component }">
-      <Transition name="page" mode="out-in">
+  <RouterView v-slot="{ Component, route }">
+    <Transition name="layout" mode="out-in">
+      <component :is="layout" :key="layout">
         <component :is="Component" :key="route.fullPath" />
-      </Transition>
-    </RouterView>
-  </component>
+      </component>
+    </Transition>
+  </RouterView>
 </template>
 
 <style>

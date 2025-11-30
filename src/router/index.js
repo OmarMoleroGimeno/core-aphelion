@@ -15,8 +15,8 @@ const router = createRouter({
             component: LoginView
         },
         {
-            path: '/admin',
-            name: 'admin',
+            path: '/users',
+            name: 'users',
             component: () => import('../views/AdminView.vue'),
             meta: { requiresAuth: true, layout: 'MainLayout' }
         },
