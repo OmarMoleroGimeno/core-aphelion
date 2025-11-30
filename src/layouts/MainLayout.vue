@@ -5,7 +5,12 @@ import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
 import { useChatStore } from '@/stores/chat';
 import Button from 'primevue/button';
-import Menu from 'primevue/menu';
+
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import InputText from 'primevue/inputtext';
+
+import { storeToRefs } from 'pinia';
 
 const router = useRouter();
 const route = useRoute();
@@ -13,89 +18,24 @@ const authStore = useAuthStore();
 const themeStore = useThemeStore();
 const chatStore = useChatStore();
 
-const { isDark } = themeStore;
+const { isDark, isSidebarExpanded } = storeToRefs(themeStore);
 const isAdmin = computed(() => authStore.userRole === 'admin');
 
-const isSidebarExpanded = ref(true);
-const isChatsExpanded = ref(true);
 const isMobileMenuOpen = ref(false);
 
 const toggleSidebar = () => {
-    isSidebarExpanded.value = !isSidebarExpanded.value;
-    if (!isSidebarExpanded.value) {
-        isChatsExpanded.value = false;
-    }
+    themeStore.toggleSidebar();
 };
 
-const toggleChats = () => {
+const handleNavClick = () => {
     if (!isSidebarExpanded.value) {
-        isSidebarExpanded.value = true;
-        isChatsExpanded.value = true;
-    } else {
-        isChatsExpanded.value = !isChatsExpanded.value;
+        themeStore.setSidebarExpanded(true);
     }
 };
 
 const handleLogout = () => {
   authStore.logout();
   router.push('/login');
-};
-
-const loadThread = async (id) => {
-    await chatStore.loadThread(id);
-    if (route.path !== '/') {
-        router.push('/');
-    }
-    isMobileMenuOpen.value = false;
-};
-
-const createNewChat = async () => {
-    await chatStore.clearChat();
-    if (route.path !== '/') {
-        router.push('/');
-    }
-    isMobileMenuOpen.value = false;
-};
-
-// Renaming & Menu Logic
-const editingThreadId = ref(null);
-const editTitle = ref('');
-const menu = ref();
-const selectedThread = ref(null);
-
-const menuItems = ref([
-    {
-        label: 'Rename',
-        icon: 'pi pi-pencil',
-        command: () => {
-            if (selectedThread.value) {
-                editingThreadId.value = selectedThread.value.id;
-                editTitle.value = selectedThread.value.title;
-            }
-        }
-    },
-    {
-        label: 'Delete',
-        icon: 'pi pi-trash',
-        class: 'text-red-600',
-        command: () => {
-            if (selectedThread.value) {
-                chatStore.deleteThread(selectedThread.value.id);
-            }
-        }
-    }
-]);
-
-const toggleMenu = (event, thread) => {
-    event.stopPropagation();
-    selectedThread.value = thread;
-    menu.value.toggle(event);
-};
-
-const saveTitle = async (thread) => {
-  if (!editTitle.value.trim()) return;
-  await chatStore.updateThreadTitle(thread.id, editTitle.value);
-  editingThreadId.value = null;
 };
 
 onMounted(async () => {
@@ -109,7 +49,7 @@ onMounted(async () => {
   <div class="flex flex-col md:flex-row h-screen w-full bg-light-bg dark:bg-dark-bg transition-colors duration-300 font-sans overflow-hidden">
     
     <!-- Context Menu (Shared) -->
-    <Menu ref="menu" :model="menuItems" :popup="true" class="w-32" />
+
 
     <!-- Mobile Header -->
     <header class="md:hidden bg-white dark:bg-[#1E1E1E] border-b border-gray-100 dark:border-gray-800/50 px-4 py-3 flex items-center justify-between z-30 shrink-0">
@@ -171,10 +111,14 @@ onMounted(async () => {
             <router-link 
               v-if="isAdmin"
               to="/admin"
-              class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative"
-              :class="route.path === '/admin' 
-                ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200'"
+              class="flex items-center py-3 rounded-xl transition-all duration-200 group relative"
+              :class="[
+                route.path === '/admin' 
+                  ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200',
+                isSidebarExpanded ? 'px-3 gap-3' : 'justify-center'
+              ]"
+              @click="handleNavClick"
             >
               <i class="pi pi-users text-xl shrink-0"></i>
               <span 
@@ -190,11 +134,16 @@ onMounted(async () => {
         <!-- Knowledge Base -->
         <div class="shrink-0 mb-2">
             <router-link 
+              v-if="isAdmin"
               to="/knowledge"
-              class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group relative"
-              :class="route.path === '/knowledge' 
-                ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200'"
+              class="flex items-center py-3 rounded-xl transition-all duration-200 group relative"
+              :class="[
+                route.path === '/knowledge' 
+                  ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200',
+                isSidebarExpanded ? 'px-3 gap-3' : 'justify-center'
+              ]"
+              @click="handleNavClick"
             >
               <i class="pi pi-book text-xl shrink-0"></i>
               <span 
@@ -207,77 +156,36 @@ onMounted(async () => {
             </router-link>
         </div>
 
-        <!-- Chats Section - Takes remaining space -->
-        <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div 
-                @click="toggleChats"
-                class="shrink-0 flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 group hover:bg-gray-50 dark:hover:bg-gray-500/30 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 relative mb-1 active:text-orange-600"
-                :class="{'bg-gray-50 dark:bg-gray-500/30': isChatsExpanded && isSidebarExpanded}"
+        <!-- Chats Link -->
+        <div class="shrink-0 mb-2">
+            <router-link 
+              to="/chats"
+              class="flex items-center py-3 rounded-xl transition-all duration-200 group relative"
+              :class="[
+                route.path === '/chats' 
+                  ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200',
+                isSidebarExpanded ? 'px-3 gap-3' : 'justify-center'
+              ]"
+              @click="handleNavClick"
             >
-                <div class="flex items-center gap-3">
-                    <i class="pi pi-comments text-xl shrink-0"></i>
-                    <span 
-                        class="font-medium whitespace-nowrap transition-all duration-300 origin-left"
-                        :class="isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'"
-                    >
-                        Chats
-                    </span>
-                </div>
-                <i 
-                    v-if="isSidebarExpanded" 
-                    class="pi pi-chevron-down text-xs transition-transform duration-200" 
-                    :class="{'rotate-180': isChatsExpanded}"
-                ></i>
-                <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Chats</span>
-            </div>
-
-            <!-- Chat List (Desktop) - Scrollable -->
-            <div v-if="isSidebarExpanded && isChatsExpanded" class="flex-1 overflow-y-auto custom-scrollbar pl-4 pr-1 flex flex-col gap-1">
-                <Button 
-                    label="New Chat" 
-                    icon="pi pi-plus" 
-                    class="w-full !bg-orange-600 hover:!bg-orange-700 !border-none !font-medium !text-sm !py-2 !mb-2 shrink-0" 
-                    @click="createNewChat"
-                />
-                <div 
-                    v-for="thread in chatStore.threads" 
-                    :key="thread.id"
-                    @click="loadThread(thread.id)"
-                    class="group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm transition-colors relative shrink-0"
-                    :class="thread.id === chatStore.threadId 
-                        ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-[#2b2b40]' 
-                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/30'"
-                >
-                    <div v-if="editingThreadId === thread.id" class="flex items-center gap-1 w-full" @click.stop>
-                         <input 
-                            v-model="editTitle" 
-                            @keyup.enter="saveTitle(thread)"
-                            @keyup.esc="editingThreadId = null"
-                            class="w-full px-1.5 py-0.5 text-xs border border-orange-500 rounded bg-white dark:bg-zinc-800 dark:text-white outline-none"
-                            autoFocus
-                        />
-                        <i class="pi pi-check text-green-500 cursor-pointer hover:text-green-600" @click="saveTitle(thread)"></i>
-                        <i class="pi pi-times text-gray-400 cursor-pointer hover:text-gray-600" @click="editingThreadId = null"></i>
-                    </div>
-                    <template v-else>
-                        <i class="pi pi-comment text-xs shrink-0 opacity-70"></i>
-                        <span class="truncate flex-1">{{ thread.title }}</span>
-                        <button 
-                            @click="toggleMenu($event, thread)" 
-                            class="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all absolute right-2"
-                            title="Options"
-                        >
-                            <i class="pi pi-ellipsis-h text-[10px]"></i>
-                        </button>
-                    </template>
-                </div>
-            </div>
+              <i class="pi pi-comments text-xl shrink-0"></i>
+              <span 
+                class="font-medium whitespace-nowrap transition-all duration-300 origin-left"
+                :class="isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'"
+              >
+                Chats
+              </span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Chats</span>
+            </router-link>
         </div>
       </nav>
 
       <!-- User Profile / Footer (Desktop) -->
       <div class="p-4 border-t border-gray-100 dark:border-gray-600/50">
-        <div class="flex items-center gap-3 p-2 rounded-xl transition-colors" :class="{'justify-center': !isSidebarExpanded, 'bg-gray-50 dark:bg-gray-500/30': isSidebarExpanded}">
+        <div class="flex items-center rounded-xl transition-colors" :class="[
+            isSidebarExpanded ? 'p-2 gap-3 bg-gray-50 dark:bg-gray-500/30' : 'py-2 justify-center'
+        ]">
             <div class="w-9 h-9 rounded-lg bg-gray-200 dark:bg-[#151521] flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-sm shrink-0 overflow-hidden">
                 <img v-if="authStore.image" :src="authStore.image" alt="User" class="w-full h-full object-cover" />
                 <span v-else>{{ authStore.user?.charAt(0).toUpperCase() || 'U' }}</span>
@@ -343,6 +251,7 @@ onMounted(async () => {
             </router-link>
 
             <router-link 
+                v-if="isAdmin"
                 to="/knowledge"
                 class="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 hover:text-gray-900 dark:hover:text-gray-200"
                 @click="isMobileMenuOpen = false"
@@ -354,35 +263,14 @@ onMounted(async () => {
             <div class="border-t border-gray-100 dark:border-gray-800/50 my-2"></div>
 
             <!-- Chats List Mobile -->
-            <div>
-                <div class="flex items-center justify-between mb-2 px-1">
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Chats</span>
-                    <Button icon="pi pi-plus" text rounded size="small" class="!w-6 !h-6 !p-0" @click="createNewChat" />
-                </div>
-                <div class="space-y-1">
-                     <div 
-                        v-for="thread in chatStore.threads" 
-                        :key="thread.id"
-                        @click="loadThread(thread.id)"
-                        class="flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer text-sm transition-colors"
-                        :class="thread.id === chatStore.threadId 
-                            ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-[#2b2b40]' 
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/30'"
-                    >
-                        <div class="flex items-center gap-2 truncate flex-1">
-                            <i class="pi pi-comment text-xs opacity-70"></i>
-                            <span class="truncate">{{ thread.title }}</span>
-                        </div>
-                        <Button 
-                            icon="pi pi-ellipsis-h" 
-                            text 
-                            rounded 
-                            class="!w-6 !h-6 !p-0 !text-gray-400" 
-                            @click.stop="toggleMenu($event, thread)"
-                        />
-                    </div>
-                </div>
-            </div>
+            <router-link 
+                to="/chats"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 hover:text-gray-900 dark:hover:text-gray-200"
+                @click="isMobileMenuOpen = false"
+            >
+                <i class="pi pi-comments text-xl"></i>
+                <span class="font-medium">Chats</span>
+            </router-link>
         </nav>
 
         <div class="p-4 border-t border-gray-100 dark:border-gray-800/50 flex gap-2">
@@ -405,7 +293,9 @@ onMounted(async () => {
     ></div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col min-w-0 overflow-hidden relative md:ml-0">
+    <main 
+        class="flex-1 flex flex-col min-w-0 overflow-hidden relative transition-all duration-300 ease-in-out"
+    >
         <!-- Floating Dark Mode Toggle (Desktop) -->
         <div class="hidden md:block fixed top-4 right-6 z-50">
             <Button 

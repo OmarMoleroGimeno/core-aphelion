@@ -1,24 +1,30 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiService } from '../services/api';
+import { useAuthStore } from './auth';
 
 export const useChatStore = defineStore('chat', () => {
-    // State
     // State
     const messages = ref([]);
     const isLoading = ref(false);
     const threadId = ref(null);
     const error = ref(null);
     const threads = ref([]);
+    const threadsLoaded = ref(false);
+    const messagesCache = ref({}); // { threadId: [messages] }
+    const authStore = useAuthStore();
 
     // Getters
     const hasMessages = computed(() => messages.value.length > 0);
 
     // Actions
-    async function fetchThreads() {
+    async function fetchThreads(force = false) {
+        if (threadsLoaded.value && !force) return;
+
         try {
             const fetchedThreads = await apiService.getThreads();
             threads.value = fetchedThreads;
+            threadsLoaded.value = true;
         } catch (e) {
             console.error('Failed to fetch threads:', e);
         }
@@ -26,10 +32,18 @@ export const useChatStore = defineStore('chat', () => {
 
     async function loadThread(id) {
         threadId.value = id;
+
+        // Check cache first
+        if (messagesCache.value[id]) {
+            messages.value = messagesCache.value[id];
+            return;
+        }
+
         isLoading.value = true;
         try {
             const history = await apiService.getMessages(id);
             messages.value = history;
+            messagesCache.value[id] = history; // Update cache
         } catch (e) {
             console.error('Failed to load thread:', e);
             error.value = 'Failed to load conversation';
@@ -40,10 +54,7 @@ export const useChatStore = defineStore('chat', () => {
 
     async function initializeChat() {
         await fetchThreads();
-        if (!threadId.value && threads.value.length > 0) {
-            // Load the most recent thread
-            await loadThread(threads.value[0].id);
-        }
+        // Auto-load removed as per requirement
     }
 
     async function sendMessage(content) {
@@ -57,6 +68,17 @@ export const useChatStore = defineStore('chat', () => {
             timestamp: new Date().toISOString()
         };
         messages.value.push(userMessage);
+
+        // Update cache
+        if (threadId.value) {
+            if (!messagesCache.value[threadId.value]) {
+                messagesCache.value[threadId.value] = [];
+            }
+            // Only push to cache if it's a different array reference
+            if (messages.value !== messagesCache.value[threadId.value]) {
+                messagesCache.value[threadId.value].push(userMessage);
+            }
+        }
 
         isLoading.value = true;
         error.value = null;
@@ -72,17 +94,27 @@ export const useChatStore = defineStore('chat', () => {
                     title: 'New Chat',
                     created_at: new Date().toISOString()
                 });
+                // Initialize cache for new thread
+                messagesCache.value[newId] = [userMessage];
             }
 
             const response = await apiService.sendMessage(content, threadId.value);
 
-            // Add assistant response
-            messages.value.push({
+            const assistantMessage = {
                 id: Date.now().toString(),
                 content: response.aiMessage.content,
                 role: 'assistant',
                 timestamp: response.aiMessage.timestamp
-            });
+            };
+
+            // Add assistant response
+            messages.value.push(assistantMessage);
+
+            // Update cache
+            if (messagesCache.value[threadId.value] && messages.value !== messagesCache.value[threadId.value]) {
+                messagesCache.value[threadId.value].push(assistantMessage);
+            }
+
 
             // Update title if changed
             if (response.newTitle) {
@@ -90,13 +122,19 @@ export const useChatStore = defineStore('chat', () => {
                 if (thread) {
                     thread.title = response.newTitle;
                 } else {
-                    await fetchThreads();
+                    await fetchThreads(true);
                 }
             }
 
         } catch (e) {
             console.error('Failed to send message:', e);
             error.value = 'Failed to send message. Please try again.';
+            // Remove user message on failure (optional, but good UX)
+            messages.value.pop();
+            if (threadId.value && messagesCache.value[threadId.value]) {
+                messagesCache.value[threadId.value].pop();
+            }
+
         } finally {
             isLoading.value = false;
         }
@@ -125,10 +163,29 @@ export const useChatStore = defineStore('chat', () => {
             if (threadId.value === id) {
                 await clearChat();
             }
+            // Remove from cache
+            delete messagesCache.value[id];
         } catch (e) {
             console.error('Failed to delete thread:', e);
         }
     }
+
+    function reset() {
+        messages.value = [];
+        isLoading.value = false;
+        threadId.value = null;
+        error.value = null;
+        threads.value = [];
+        threadsLoaded.value = false;
+        messagesCache.value = {};
+    }
+
+    // Watch for logout
+    authStore.$subscribe((mutation, state) => {
+        if (!state.token) {
+            reset();
+        }
+    });
 
     return {
         messages,
@@ -143,6 +200,7 @@ export const useChatStore = defineStore('chat', () => {
         sendMessage,
         clearChat,
         updateThreadTitle,
-        deleteThread
+        deleteThread,
+        reset
     };
 });

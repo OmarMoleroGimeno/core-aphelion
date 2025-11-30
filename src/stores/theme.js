@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 export const useThemeStore = defineStore('theme', () => {
     const isDark = ref(localStorage.getItem('theme') === 'dark');
+    const isSidebarExpanded = ref(true);
 
     const toggleTheme = () => {
         isDark.value = !isDark.value;
@@ -10,6 +11,14 @@ export const useThemeStore = defineStore('theme', () => {
 
     const setDark = (val) => {
         isDark.value = val;
+    };
+
+    const toggleSidebar = () => {
+        isSidebarExpanded.value = !isSidebarExpanded.value;
+    };
+
+    const setSidebarExpanded = (val) => {
+        isSidebarExpanded.value = val;
     };
 
     watch(isDark, (val) => {
@@ -24,7 +33,10 @@ export const useThemeStore = defineStore('theme', () => {
 
     return {
         isDark,
+        isSidebarExpanded,
         toggleTheme,
-        setDark
+        setDark,
+        toggleSidebar,
+        setSidebarExpanded
     };
 });

@@ -4,7 +4,5 @@ import MainLayout from '../layouts/MainLayout.vue'
 </script>
 
 <template>
-  <MainLayout>
     <ChatInterface />
-  </MainLayout>
 </template>

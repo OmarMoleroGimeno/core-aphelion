@@ -7,9 +7,7 @@ const router = createRouter({
     routes: [
         {
             path: '/',
-            name: 'chat',
-            component: ChatView,
-            meta: { requiresAuth: true }
+            redirect: '/chats'
         },
         {
             path: '/login',
@@ -20,21 +18,43 @@ const router = createRouter({
             path: '/admin',
             name: 'admin',
             component: () => import('../views/AdminView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, layout: 'MainLayout' }
         },
         {
             path: '/knowledge',
             name: 'knowledge',
             component: () => import('../views/KnowledgeBaseView.vue'),
-            meta: { requiresAuth: true }
+            meta: { requiresAuth: true, layout: 'MainLayout', requiresAdmin: true }
+        },
+        {
+            path: '/chats',
+            name: 'chats',
+            component: () => import('../views/ChatListView.vue'),
+            meta: { requiresAuth: true, layout: 'MainLayout' }
+        },
+        {
+            path: '/chats/new',
+            name: 'new-chat',
+            component: ChatView,
+            meta: { requiresAuth: true, layout: 'MainLayout' }
+        },
+        {
+            path: '/chats/:id',
+            name: 'chat-detail',
+            component: ChatView,
+            meta: { requiresAuth: true, layout: 'MainLayout' }
         }
     ]
 })
 
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
+    const userRole = localStorage.getItem('role') // Corrected key
+
     if (to.meta.requiresAuth && !token) {
         next({ name: 'login' })
+    } else if (to.meta.requiresAdmin && userRole !== 'admin') {
+        next({ name: 'chats' })
     } else {
         next()
     }

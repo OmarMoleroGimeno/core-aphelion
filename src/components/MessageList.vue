@@ -94,7 +94,7 @@ watch(() => props.loading, () => scrollToBottom('smooth'));
       </TransitionGroup>
 
       <!-- Loading Indicator -->
-      <div v-if="loading" class="flex justify-start mb-6">
+      <div v-if="loading" class="flex justify-start mb-6 !pb-10">
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-3 rounded-2xl rounded-bl-none shadow-sm flex items-center gap-2">
           <div class="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
           <div class="w-2 h-2 bg-orange-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
