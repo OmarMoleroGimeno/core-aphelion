@@ -13,7 +13,9 @@ import InputIcon from 'primevue/inputicon';
 const documentsStore = useDocumentsStore();
 const { documents, loading, error } = storeToRefs(documentsStore);
 const isUploading = ref(false);
+const uploadProgress = ref('');
 const isDragging = ref(false);
+const selectedDocuments = ref([]);
 const fileInput = ref(null);
 const filters = ref({
     global: { value: null, matchMode: 'contains' }
@@ -24,30 +26,39 @@ onMounted(() => {
 });
 
 async function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) await uploadFile(file);
+    const files = Array.from(event.target.files);
+    if (files.length > 0) await uploadFiles(files);
 }
 
 function handleDrop(event) {
     isDragging.value = false;
-    const file = event.dataTransfer.files[0];
-    if (file) uploadFile(file);
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length > 0) uploadFiles(files);
 }
 
-async function uploadFile(file) {
-    if (!['application/pdf', 'text/plain'].includes(file.type)) {
-        alert('Invalid file type. Please upload PDF or TXT.'); 
-        return;
+async function uploadFiles(files) {
+    // Validate all files
+    const validFiles = files.filter(file => ['application/pdf', 'text/plain'].includes(file.type));
+    
+    if (validFiles.length < files.length) {
+        alert(`Some files were skipped due to invalid type. Only PDF and TXT are allowed.`);
     }
 
+    if (validFiles.length === 0) return;
+
     isUploading.value = true;
+    uploadProgress.value = `Uploading 0/${validFiles.length}...`;
 
     try {
-        await documentsStore.uploadDocument(file);
+        await documentsStore.uploadMultipleDocuments(validFiles, (completed, total) => {
+            uploadProgress.value = `Uploading ${completed}/${total}...`;
+        });
     } catch (e) {
         // Error is handled in store state
+        console.error(e);
     } finally {
         isUploading.value = false;
+        uploadProgress.value = '';
         if (fileInput.value) fileInput.value.value = '';
     }
 }
@@ -57,12 +68,25 @@ async function deleteDocument(id) {
     await documentsStore.deleteDocument(id);
 }
 
+async function deleteSelectedDocuments() {
+    if (selectedDocuments.value.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to delete ${selectedDocuments.value.length} documents?`)) return;
+    
+    try {
+        const ids = selectedDocuments.value.map(d => d.id);
+        await documentsStore.deleteMultipleDocuments(ids);
+        selectedDocuments.value = [];
+    } catch (e) {
+        // Error handled in store
+    }
+}
+
 const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
 };
 
 const formatSize = (bytes) => {
-    console.log(bytes);
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -104,11 +128,12 @@ const formatSize = (bytes) => {
                             ref="fileInput" 
                             class="hidden" 
                             accept=".pdf,.txt"
+                            multiple
                             @change="handleFileSelect"
                         />
                         <div v-if="isUploading">
                             <i class="pi pi-spin pi-spinner text-4xl text-indigo-600 dark:text-indigo-400 mb-4"></i>
-                            <p class="text-gray-600 dark:text-gray-300 font-medium">Uploading...</p>
+                            <p class="text-gray-600 dark:text-gray-300 font-medium">{{ uploadProgress || 'Uploading...' }}</p>
                         </div>
                         <div v-else>
                             <div class="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -119,7 +144,7 @@ const formatSize = (bytes) => {
                             <Button 
                                 label="Select Files" 
                                 icon="pi pi-folder-open" 
-                                class="!bg-indigo-600 hover:!bg-indigo-700 !border-none"
+                                class="!bg-indigo-600 hover:!bg-indigo-700 !border-none !text-white"
                             />
                         </div>
                     </div>
@@ -134,6 +159,15 @@ const formatSize = (bytes) => {
                                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Documents</h2>
                             </div>
                             <div class="flex items-center gap-2">
+                                <Button 
+                                    v-if="selectedDocuments.length > 0"
+                                    :label="`Delete (${selectedDocuments.length})`" 
+                                    icon="pi pi-trash" 
+                                    severity="danger" 
+                                    text 
+                                    @click="deleteSelectedDocuments"
+                                    class="mr-2 !text-red-600 hover:!bg-red-50 dark:hover:!bg-red-900/20"
+                                />
                                 <IconField iconPosition="left">
                                     <InputIcon class="pi pi-search" />
                                     <InputText v-model="filters['global'].value" placeholder="Search documents..." class="!py-2" />
@@ -153,6 +187,10 @@ const formatSize = (bytes) => {
                     <DataTable 
                         :value="documents" 
                         :loading="loading" 
+                        v-model:selection="selectedDocuments"
+                        selectionMode="multiple"
+                        :metaKeySelection="false"
+                        dataKey="id"
                         stripedRows 
                         class="w-full" 
                         paginator 
@@ -173,6 +211,8 @@ const formatSize = (bytes) => {
                                 <p class="text-gray-500 dark:text-gray-400 text-sm">Upload files to get started</p>
                             </div>
                         </template>
+
+                        <Column selectionMode="multiple" headerStyle="width: 3rem"></Column>
 
                         <Column field="filename" header="Name">
                             <template #body="slotProps">
@@ -200,7 +240,7 @@ const formatSize = (bytes) => {
                                     severity="danger" 
                                     text 
                                     rounded 
-                                    @click="deleteDocument(slotProps.data.id)"
+                                    @click.stop="deleteDocument(slotProps.data.id)"
                                     class="!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-900/20"
                                 />
                             </template>

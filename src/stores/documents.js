@@ -44,6 +44,52 @@ export const useDocumentsStore = defineStore('documents', () => {
         }
     };
 
+    const uploadMultipleDocuments = async (files, onProgress) => {
+        loading.value = true;
+        error.value = null;
+        const results = [];
+        const errors = [];
+        let completed = 0;
+
+        try {
+            // Upload files one by one (or in parallel)
+            for (const file of files) {
+                try {
+                    const result = await apiService.uploadDocument(file);
+                    results.push(result);
+                } catch (e) {
+                    console.error(`Failed to upload file ${file.name}:`, e);
+                    errors.push({ file: file.name, error: e.message });
+                } finally {
+                    completed++;
+                    if (onProgress) onProgress(completed, files.length);
+                }
+            }
+
+            // Always fetch updated list if at least one succeeded
+            if (results.length > 0) {
+                await fetchDocuments(true);
+            }
+
+            if (errors.length > 0) {
+                // If all failed, throw error. If partial, maybe set error state but don't throw?
+                if (results.length === 0) {
+                    throw new Error(`Failed to upload ${errors.length} files.`);
+                } else {
+                    // Partial success
+                    error.value = `Uploaded ${results.length} files. Failed: ${errors.length}`;
+                    // Allow UI to see error but also successful uploads
+                }
+            }
+        } catch (e) {
+            console.error('Failed to upload documents:', e);
+            error.value = e.message || 'Upload failed';
+            throw e;
+        } finally {
+            loading.value = false;
+        }
+    };
+
     const deleteDocument = async (id) => {
         try {
             await apiService.deleteDocument(id);
@@ -52,6 +98,23 @@ export const useDocumentsStore = defineStore('documents', () => {
             console.error('Failed to delete document:', e);
             error.value = 'Failed to delete document';
             throw e;
+        }
+    };
+
+    const deleteMultipleDocuments = async (ids) => {
+        loading.value = true;
+        try {
+            await apiService.deleteMultipleDocuments(ids);
+            // Update local state
+            documents.value = documents.value.filter(d => !ids.includes(d.id));
+        } catch (e) {
+            console.error('Failed to delete documents:', e);
+            error.value = 'Failed to delete some documents';
+            // Fetch fresh list to ensure consistency
+            await fetchDocuments(true);
+            throw e;
+        } finally {
+            loading.value = false;
         }
     };
 
@@ -76,7 +139,9 @@ export const useDocumentsStore = defineStore('documents', () => {
         error,
         fetchDocuments,
         uploadDocument,
+        uploadMultipleDocuments,
         deleteDocument,
+        deleteMultipleDocuments,
         reset
     };
 });

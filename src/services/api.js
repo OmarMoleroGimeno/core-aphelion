@@ -67,7 +67,7 @@ export const apiService = {
     async uploadDocument(file) {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/documents`, {
             method: 'POST',
@@ -98,5 +98,15 @@ export const apiService = {
         });
         if (!response.ok) throw new Error('Failed to delete document');
         return response.text();
+    },
+
+    async deleteMultipleDocuments(ids) {
+        const response = await fetch(`${API_URL}/documents/batch-delete`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ ids })
+        });
+        if (!response.ok) throw new Error('Failed to delete documents');
+        return response.json();
     }
 };

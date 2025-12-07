@@ -12,6 +12,13 @@ A modern chat application built with Vue 3, Firebase, and Express.js featuring d
 - 🎯 **State Management**: Pinia stores for auth, chat, and theme
 - 🚀 **Fast Development**: Vite for lightning-fast HMR
 
+## Documentation
+
+For detailed documentation, please refer to:
+
+- [Frontend Documentation](docs/FRONTEND.md)
+- [Backend Documentation](docs/BACKEND.md)
+
 ## Tech Stack
 
 ### Frontend
