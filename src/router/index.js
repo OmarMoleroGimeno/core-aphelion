@@ -33,6 +33,12 @@ const router = createRouter({
             meta: { requiresAuth: true, layout: 'MainLayout' }
         },
         {
+            path: '/tool-advisor',
+            name: 'tool-advisor',
+            component: () => import('../views/ToolAdvisorView.vue'),
+            meta: { requiresAuth: true, layout: 'MainLayout' }
+        },
+        {
             path: '/chats/new',
             name: 'new-chat',
             component: ChatView,

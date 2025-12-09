@@ -42,13 +42,6 @@ const handleSubmit = async () => {
   <div class="min-h-screen flex bg-[#0f172a]">
     <!-- Left Side - Login Form -->
     <div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-24 bg-[#0f172a] text-white relative">
-      <!-- Decorative dots top left -->
-      <div class="absolute top-8 left-8 flex gap-2">
-        <div class="w-3 h-3 rounded-full bg-red-500"></div>
-        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-        <div class="w-3 h-3 rounded-full bg-green-500"></div>
-      </div>
-
       <div class="w-full max-w-md space-y-8">
         <div class="text-center animate-fade-in-up">
           <div class="mx-auto h-12 w-12 bg-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/30">

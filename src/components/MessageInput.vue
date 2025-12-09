@@ -7,6 +7,10 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
+  },
+  placeholder: {
+    type: String,
+    default: 'Type your message...'
   }
 });
 
@@ -30,13 +34,13 @@ const handleKeydown = (e) => {
 
 <template>
   <div class="w-full shrink-0 bg-transparent p-4 md:p-6 transition-colors duration-300">
-    <div class="max-w-4xl align-center mx-auto relative flex gap-3">
+    <div class="max-w-7xl align-center mx-auto relative flex gap-3">
       <div class="flex-1 relative">
         <Textarea 
           v-model="message" 
           autoResize 
           rows="1"
-          placeholder="Type your message..." 
+          :placeholder="placeholder" 
           class="w-full !pr-12 !py-3 !pl-4 !rounded-xl !border-zinc-300 dark:!border-zinc-700 focus:!border-orange-500 !bg-zinc-50 dark:!bg-zinc-900 focus:!bg-white dark:focus:!bg-zinc-900 dark:!text-white dark:placeholder-zinc-500 transition-colors !shadow-none focus:!shadow-sm"
           :disabled="loading"
           @keydown="handleKeydown"

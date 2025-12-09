@@ -156,6 +156,30 @@ onMounted(async () => {
             </router-link>
         </div>
 
+        <!-- Tool Advisor -->
+        <div class="shrink-0 mb-2">
+            <router-link 
+              to="/tool-advisor"
+              class="flex items-center py-3 rounded-xl transition-all duration-200 group relative"
+              :class="[
+                route.path === '/tool-advisor' 
+                  ? 'bg-orange-50 dark:bg-gray-500/30 text-orange-600 dark:text-orange-400' 
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-500/30 hover:text-gray-900 dark:hover:text-gray-200',
+                isSidebarExpanded ? 'px-3 gap-3' : 'justify-center'
+              ]"
+              @click="handleNavClick"
+            >
+              <i class="pi pi-compass text-xl shrink-0"></i>
+              <span 
+                class="font-medium whitespace-nowrap transition-all duration-300 origin-left"
+                :class="isSidebarExpanded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'"
+              >
+                Tool Advisor
+              </span>
+              <span v-if="!isSidebarExpanded" class="absolute left-16 bg-gray-900 dark:bg-gray-500/30 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">Tool Advisor</span>
+            </router-link>
+        </div>
+
         <!-- Chats Link -->
         <div class="shrink-0 mb-2">
             <router-link 
@@ -261,6 +285,15 @@ onMounted(async () => {
             </router-link>
 
             <div class="border-t border-gray-100 dark:border-gray-800/50 my-2"></div>
+
+            <router-link 
+                to="/tool-advisor"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#2b2b40]/50 hover:text-gray-900 dark:hover:text-gray-200"
+                @click="isMobileMenuOpen = false"
+            >
+                <i class="pi pi-compass text-xl"></i>
+                <span class="font-medium">Tool Advisor</span>
+            </router-link>
 
             <!-- Chats List Mobile -->
             <router-link 
