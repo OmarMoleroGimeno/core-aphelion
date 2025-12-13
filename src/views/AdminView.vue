@@ -25,7 +25,7 @@ const { users, loading } = storeToRefs(usersStore);
 const router = useRouter();
 const toast = useToast();
 
-const newUser = ref({ email: '', username: '', password: '', role: 'user' });
+const newUser = ref({ email: '', username: '', role: 'user' });
 const creating = ref(false);
 const deleteDialogVisible = ref(false);
 const userToDelete = ref(null);
@@ -61,16 +61,16 @@ const loadUsers = async (force = false) => {
 };
 
 const handleCreateUser = async () => {
-  if (!newUser.value.email || !newUser.value.username || !newUser.value.password) {
-    toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'All fields are required', life: 3000 });
+  if (!newUser.value.email || !newUser.value.username) {
+    toast.add({ severity: 'warn', summary: 'Validation Error', detail: 'Email & Username are required', life: 3000 });
     return;
   }
 
   creating.value = true;
   try {
     await usersStore.createUser(newUser.value);
-    toast.add({ severity: 'success', summary: 'Success', detail: 'User created successfully', life: 3000 });
-    newUser.value = { email: '', username: '', password: '', role: 'user' };
+    toast.add({ severity: 'success', summary: 'Invitation Sent', detail: 'User created & email sent successfully', life: 5000 });
+    newUser.value = { email: '', username: '', role: 'user' };
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 3000 });
   } finally {
@@ -197,9 +197,21 @@ onMounted(() => {
 
             <!-- Create User Form -->
             <div class="bg-white dark:bg-[#1E1E1E] p-6 rounded-2xl shadow-sm dark:shadow-none mb-8 border border-gray-100 dark:border-gray-600/50">
-              <div class="flex items-center gap-2 mb-6">
-                <i class="pi pi-user-plus text-xl text-orange-600 dark:text-orange-400"></i>
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create New User</h2>
+              <div class="flex items-center gap-2 mb-6 justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="pi pi-user-plus text-xl text-orange-600 dark:text-orange-400"></i>
+                  <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Create New User</h2>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  :loading="creating"
+                  :disabled="creating"
+                  label="Invite User"
+                  icon="pi pi-send"
+                  class="!bg-gradient-to-r !from-orange-500 !to-orange-600 hover:!from-orange-600 hover:!to-orange-700 !border-none !font-medium !shadow-lg !shadow-orange-500/20 dark:text-gray-200 dark:hover:!text-white"
+                  @click="handleCreateUser"
+                  />
               </div>
               
               <form @submit.prevent="handleCreateUser" class="space-y-4">
@@ -238,21 +250,6 @@ onMounted(() => {
                   
                   <div class="flex flex-col gap-2">
                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Password
-                    </label>
-                    <Password 
-                        v-model="newUser.password" 
-                        :feedback="false" 
-                        toggleMask 
-                        placeholder="••••••••" 
-                        inputClass="w-full"
-                        class="w-full"
-                        required
-                    />
-                  </div>
-                  
-                  <div class="flex flex-col gap-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Role
                     </label>
                     <Select 
@@ -265,15 +262,6 @@ onMounted(() => {
                     />
                   </div>
                 </div>
-
-                <Button 
-                  type="submit" 
-                  :loading="creating"
-                  :disabled="creating"
-                  label="Create User"
-                  icon="pi pi-plus"
-                  class="!bg-gradient-to-r !from-orange-500 !to-orange-600 hover:!from-orange-600 hover:!to-orange-700 !border-none !font-medium !shadow-lg !shadow-orange-500/20 dark:text-gray-200 dark:hover:!text-white"
-                />
               </form>
             </div>
 
@@ -340,6 +328,14 @@ onMounted(() => {
                 <Column field="role" header="Role">
                     <template #body="slotProps">
                         <Tag :value="slotProps.data.role" :severity="slotProps.data.role === 'admin' ? 'warn' : 'info'" />
+                    </template>
+                </Column>
+                <Column header="Status">
+                    <template #body="slotProps">
+                        <Tag 
+                          :value="slotProps.data.is_active === false ? 'Pending Invite' : 'Active'" 
+                          :severity="slotProps.data.is_active === false ? 'danger' : 'success'" 
+                        />
                     </template>
                 </Column>
                 <Column header="Google">

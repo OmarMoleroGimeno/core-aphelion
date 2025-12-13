@@ -18,8 +18,15 @@ if (route.query.token) {
   const user = route.query.username;
   const image = route.query.image;
   const role = route.query.role || 'user';
+  const setupRequired = route.query.setup_required === 'true';
+
   authStore.setToken(token, user, image, role);
-  router.push('/');
+
+  if (setupRequired) {
+    router.push('/set-password?mode=authenticated');
+  } else {
+    router.push('/');
+  }
 }
 
 // Check for access denied error

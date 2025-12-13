@@ -15,10 +15,15 @@ const router = createRouter({
             component: LoginView
         },
         {
+            path: '/set-password',
+            name: 'set-password',
+            component: () => import('../views/SetPasswordView.vue')
+        },
+        {
             path: '/users',
             name: 'users',
             component: () => import('../views/AdminView.vue'),
-            meta: { requiresAuth: true, layout: 'MainLayout' }
+            meta: { requiresAuth: true, layout: 'MainLayout', requiresAdmin: true }
         },
         {
             path: '/knowledge',
@@ -49,6 +54,16 @@ const router = createRouter({
             name: 'chat-detail',
             component: ChatView,
             meta: { requiresAuth: true, layout: 'MainLayout' }
+        },
+        {
+            path: '/access-denied',
+            name: 'access-denied',
+            component: () => import('../views/AccessDeniedView.vue'),
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: 'not-found',
+            component: () => import('../views/NotFoundView.vue'),
         }
     ]
 })
@@ -60,7 +75,7 @@ router.beforeEach((to, from, next) => {
     if (to.meta.requiresAuth && !token) {
         next({ name: 'login' })
     } else if (to.meta.requiresAdmin && userRole !== 'admin') {
-        next({ name: 'chats' })
+        next({ name: 'access-denied' })
     } else {
         next()
     }
